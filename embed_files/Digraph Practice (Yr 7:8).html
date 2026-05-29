@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Phonics Quest NZ ⚡</title>
+    <style>
+        :root {
+            --bg-dark: #121214;
+            --card-bg: #1a1a1e;
+            --neon-green: #00ff66;
+            --neon-blue: #00f0ff;
+            --neon-pink: #ff007f;
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+        }
+
+        body {
+            font-family: 'Cabinet Grotesk', 'Segoe UI', Inter, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            max-width: 560px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 24px;
+            border: 2px solid #2a2a32;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        /* Dashboard HUD */
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            background: #22222a;
+            padding: 12px 20px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            border: 1px solid #33333f;
+        }
+        .hud span { display: flex; align-items: center; gap: 6px; }
+        .xp-count { color: var(--neon-blue); }
+        .streak-count { color: var(--neon-pink); }
+        .rank-tag { color: var(--neon-green); }
+
+        h1 {
+            font-size: 2rem;
+            margin: 0 0 5px 0;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+
+        /* Tab Navigation */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            background: #111113;
+            border-radius: 14px;
+            padding: 6px;
+            margin-bottom: 30px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: none;
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+        .tab-btn.active {
+            background: #22222a;
+            color: var(--text-main);
+            box-shadow: 0 0 10px rgba(255,255,255,0.05);
+        }
+
+        .game-section { display: none; }
+        .game-section.active { display: block; }
+
+        /* Words & Prompts */
+        .prompt-title {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+        .word-box {
+            font-size: 3rem;
+            letter-spacing: 4px;
+            margin: 25px 0;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 15px rgba(255,255,255,0.2);
+        }
+
+        /* Custom Structured Grid Layout */
+        .digraph-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 25px;
+        }
+        
+        /* Non-split digraph row */
+        .standard-row {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 8px;
+        }
+        
+        /* Split digraph row */
+        .split-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 5px;
+        }
+
+        button.choice {
+            padding: 14px 5px;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            background: #22222a;
+            border: 2px solid #33333f;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .split-row button.choice {
+            padding: 14px;
+        }
+        button.choice:hover {
+            border-color: var(--neon-blue);
+            background: #262633;
+            transform: translateY(-2px);
+        }
+
+        /* Main Action Buttons */
+        .action-btn {
+            background: linear-gradient(135deg, #0072ff, #00f0ff);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 14px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .action-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.5);
+        }
+        .mic-btn.recording {
+            background: linear-gradient(135deg, #ff0055, #ff007f);
+            box-shadow: 0 0 25px rgba(255, 0, 127, 0.6);
+            animation: pulse 1.5s infinite;
+        }
+
+        /* Smart Dynamic Alerts */
+        .feedback {
+            margin-top: 25px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            min-height: 35px;
+            padding: 10px;
+            border-radius: 12px;
+        }
+        .success-flash { color: var(--neon-green); text-shadow: 0 0 10px rgba(0,255,102,0.3); }
+        .error-flash { color: var(--neon-pink); text-shadow: 0 0 10px rgba(255,0,127,0.3); }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h1>Phonics Quest</h1>
+    <div class="subtitle">Level Up Your Digraphs</div>
+
+    <div class="hud">
+        <span>🔥 <span id="hud-streak" class="streak-count">0</span> Day Streak</span>
+        <span>⚡ <span id="hud-xp" class="xp-count">0</span> XP</span>
+        <span id="hud-rank" class="rank-tag">⚡ Recruit</span>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="tab-btn active" id="tab-fill" onclick="switchTab('fill')">Fill Gap</button>
+        <button class="tab-btn" id="tab-listen" onclick="switchTab('listen')">Listen Up</button>
+        <button class="tab-btn" id="tab-read" onclick="switchTab('read')">Speak Out</button>
+    </div>
+
+    <div id="game-fill" class="game-section active">
+        <div class="prompt-title">Complete the blank to clear the level:</div>
+        <div class="word-box" id="fill-word">r _ _ n</div>
+        <div class="digraph-container" id="fill-options"></div>
+        <div class="feedback" id="fill-feedback"></div>
+    </div>
+
+    <div id="game-listen" class="game-section">
+        <div class="prompt-title">Deconstruct the sound waves:</div>
+        <button class="action-btn" onclick="playListenAudio()">🔊 Play Audio</button>
+        <div class="digraph-container" id="listen-options"></div>
+        <div class="feedback" id="listen-feedback"></div>
+    </div>
+
+    <div id="game-read" class="game-section">
+        <div class="prompt-title">Hit mic, read clearly, hit stop:</div>
+        <div class="word-box" id="read-word" style="color: var(--neon-blue);">boat</div>
+        <button class="action-btn" id="mic-button" onclick="toggleListening()">🎤 Tap to Record</button>
+        <div class="feedback" id="read-feedback"></div>
+    </div>
+</div>
+
+<script>
+    // Explicitly separated digraph pools
+    const standardDigraphs = ["ai", "ay", "oa", "ow", "ie", "sh", "ch", "th", "ee"];
+    const splitDigraphs = ["a_e", "o_e"];
+    
+    let xp = 0;
+    let streak = 0;
+    
+    const wordsData = [
+        { display: "r _ _ n", correct: "ai", full: "rain" },
+        { display: "pl _ _", correct: "ay", full: "play" },
+        { display: "c _ k _", correct: "a_e", full: "cake" },
+        { display: "b _ _ t", correct: "oa", full: "boat" },
+        { display: "sn _ _", correct: "ow", full: "snow" },
+        { display: "h _ m _", correct: "o_e", full: "home" },
+        { display: "p _ _", correct: "ie", full: "pie" },
+        { display: "_ _ ip", correct: "sh", full: "ship" },
+        { display: "_ _ op", correct: "ch", full: "chop" },
+        { display: "wi _ _", correct: "th", full: "with" },
+        { display: "tr _ _", correct: "ee", full: "tree" }
+    ];
+
+    let currentFillWord;
+    let currentListenWord;
+    let currentReadWord;
+    let isListening = false;
+    let recognition;
+
+    function addXP(amount) {
+        xp += amount;
+        document.getElementById('hud-xp').innerText = xp;
+        if(xp === 30) { streak = 1; document.getElementById('hud-streak').innerText = streak; }
+        
+        let rank = "Recruit";
+        if (xp >= 150) rank = "Certified Legend 👑";
+        else if (xp >= 80) rank = "Phonics Pro ⚔️";
+        else if (xp >= 40) rank = "Vowel Runner 🏃‍♂️";
+        document.getElementById('hud-rank').innerText = "⚡ " + rank;
+    }
+
+    // --- TTS Function (Slow NZ Accent Tuning) ---
+    function speakKiwi(text, isSlow = false, callback = null) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-NZ'; 
+        utterance.rate = isSlow ? 0.65 : 0.9;
+        
+        const voices = window.speechSynthesis.getVoices();
+        const nzVoice = voices.find(voice => voice.lang === 'en-NZ');
+        if (nzVoice) utterance.voice = nzVoice;
+
+        if (callback) utterance.onend = callback;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.game-section').forEach(s => s.classList.remove('active'));
+        
+        document.getElementById(`tab-${tab}`).classList.add('active');
+        document.getElementById(`game-${tab}`).classList.add('active');
+        
+        if(tab === 'fill') initFillGame();
+        if(tab === 'listen') initListenGame();
+        if(tab === 'read') initReadGame();
+    }
+
+    // --- Render Digraph Button rows seamlessly ---
+    function generateDigraphLayout(targetDivId, clickHandlerName) {
+        const container = document.getElementById(targetDivId);
+        container.innerHTML = '';
+
+        // One dedicated row for non-split items
+        const standardRow = document.createElement('div');
+        standardRow.className = 'standard-row';
+        standardDigraphs.forEach(d => {
+            const btn = document.createElement('button');
+            btn.className = 'choice';
+            btn.innerText = d;
+            btn.setAttribute('onclick', `${clickHandlerName}('${d}')`);
+            standardRow.appendChild(btn);
+        });
+
+        // Split items row
+        const splitRow = document.createElement('div');
+        splitRow.className = 'split-row';
+        splitDigraphs.forEach(d => {
+            const btn = document.createElement('button');
+            btn.className = 'choice';
+            btn.innerText = d;
+            btn.setAttribute('onclick', `${clickHandlerName}('${d}')`);
+            splitRow.appendChild(btn);
+        });
+
+        container.appendChild(standardRow);
+        container.appendChild(splitRow);
+    }
+
+    // --- GAME 1 LOGIC ---
+    function initFillGame() {
+        currentFillWord = wordsData[Math.floor(Math.random() * wordsData.length)];
+        document.getElementById('fill-word').innerText = currentFillWord.display;
+        document.getElementById('fill-feedback').innerText = '';
+        generateDigraphLayout('fill-options', 'checkFillAnswer');
+    }
+
+    function checkFillAnswer(selected) {
+        const feedback = document.getElementById('fill-feedback');
+        if (selected === currentFillWord.correct) {
+            feedback.innerHTML = `<span class="success-flash">🎯 Sweet! It spells ${currentFillWord.full.toUpperCase()}! (+10 XP)</span>`;
+            speakKiwi(`Nice work!`, false);
+            addXP(10);
+            setTimeout(initFillGame, 1800);
+        } else {
+            feedback.innerHTML = `<span class="error-flash">❌ Missed it. Give it another go!</span>`;
+            speakKiwi("Try again.", false);
+        }
+    }
+
+    // --- GAME 2 LOGIC ---
+    function initListenGame() {
+        currentListenWord = wordsData[Math.floor(Math.random() * wordsData.length)];
+        document.getElementById('listen-feedback').innerText = '';
+        generateDigraphLayout('listen-options', 'checkListenAnswer');
+    }
+
+    function playListenAudio() {
+        speakKiwi(currentListenWord.full, true); 
+    }
+
+    function checkListenAnswer(selected) {
+        const feedback = document.getElementById('listen-feedback');
+        if (selected === currentListenWord.correct) {
+            feedback.innerHTML = `<span class="success-flash">🔥 Clean hear! Locked in the "${currentListenWord.correct}" sound! (+10 XP)</span>`;
+            speakKiwi("Choice! Correct.", false);
+            addXP(10);
+            setTimeout(initListenGame, 1800);
+        } else {
+            feedback.innerHTML = `<span class="error-flash">❌ Incorrect frequency, run the audio back!</span>`;
+            speakKiwi("Not quite.", false);
+        }
+    }
+
+    // --- GAME 3 LOGIC ---
+    function initReadGame() {
+        currentReadWord = wordsData[Math.floor(Math.random() * wordsData.length)];
+        document.getElementById('read-word').innerText = currentReadWord.full;
+        document.getElementById('read-feedback').innerText = '';
+        setupSpeechRecognition();
+    }
+
+    function setupSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            document.getElementById('read-feedback').innerText = "Mic engine failed to boot. Try Google Chrome.";
+            return;
+        }
+        recognition = new SpeechRecognition();
+        recognition.lang = 'en-NZ'; 
+        recognition.interimResults = false;
+
+        recognition.onresult = function(event) {
+            const spokenText = event.results[0][0].transcript.toLowerCase().trim();
+            handleReadingAssessment(spokenText);
+        };
+
+        recognition.onerror = function() {
+            toggleListening();
+        };
+
+        recognition.onend = function() {
+            if(isListening) toggleListening();
+        };
+    }
+
+    function toggleListening() {
+        const btn = document.getElementById('mic-button');
+        if (!isListening) {
+            recognition.start();
+            isListening = true;
+            btn.innerText = "🛑 Stop Recording";
+            btn.classList.add('recording');
+        } else {
+            recognition.stop();
+            isListening = false;
+            btn.innerText = "🎤 Tap to Record";
+            btn.classList.remove('recording');
+        }
+    }
+
+    function handleReadingAssessment(spokenText) {
+        const target = currentReadWord.full.toLowerCase();
+        const feedback = document.getElementById('read-feedback');
+
+        if (spokenText.includes(target) || target.includes(spokenText) && spokenText.length > 1) {
+            feedback.innerHTML = `<span class="success-flash">🚀 Absolute precision! You nailed: "${spokenText}" (+20 XP)</span>`;
+            speakKiwi("Tumeke! Brilliant.", false);
+            addXP(20);
+            setTimeout(initReadGame, 2500);
+        } else {
+            feedback.innerHTML = `<span class="error-flash">⚠️ Audio mismatch. System re-calibrating. Listen & Repeat!</span>`;
+            
+            speakKiwi("Let's calibrate. The word is...", false, () => {
+                speakKiwi(target, true, () => { 
+                    speakKiwi(`Your turn, copy that sound.`, false, () => {
+                        setTimeout(() => {
+                            feedback.innerHTML = `<span style="color:var(--neon-blue); font-weight:bold;">⚡ Standby... Echo loop active for: "${target.toUpperCase()}"</span>`;
+                            toggleListening(); 
+                        }, 200);
+                    });
+                });
+            });
+        }
+    }
+
+    window.onload = () => {
+        initFillGame();
+    };
+</script>
+
+</body>
+</html>
